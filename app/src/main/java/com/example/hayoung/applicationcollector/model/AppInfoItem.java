@@ -1,5 +1,6 @@
 package com.example.hayoung.applicationcollector.model;
 
+import android.app.usage.UsageStats;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -8,7 +9,10 @@ import android.graphics.drawable.Drawable;
 
 public class AppInfoItem {
     private String appName;
+    private String packageName;
     private Drawable appIcon;
+    private long installedTime;
+    private UsageStats usageStats;
 
     public AppInfoItem(String appName, Drawable appIcon) {
         this.appName = appName;
@@ -29,5 +33,29 @@ public class AppInfoItem {
 
     public void setAppIcon(Drawable appIcon) {
         this.appIcon = appIcon;
+    }
+
+    public long getInstalledTime() {
+        return installedTime;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
+    public void setInstalledTime(long installedTime) {
+        this.installedTime = installedTime;
+    }
+
+    public UsageStats getUsageStats() {
+        return usageStats;
+    }
+
+    public void setUsageStats(UsageStats usageStats) {
+        this.usageStats = usageStats;
     }
 }
