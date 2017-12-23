@@ -1,7 +1,6 @@
 package com.example.hayoung.applicationcollector.adapter;
 
 import android.annotation.SuppressLint;
-import android.app.usage.UsageStats;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +13,6 @@ import com.example.hayoung.applicationcollector.model.AppInfoItem;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -46,22 +44,26 @@ public class AppInfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         holder.appNameTextView.setText(item.getAppName());
         holder.numberTextView.setText(String.valueOf(position + 1) + ".");
 
-        UsageStats usageStats = item.getUsageStats();
-        if (usageStats == null || usageStats.getLastTimeUsed() == 0) {
+        AppInfoItem.UsageStat usageStats = item.getUsageStats();
+        if (usageStats == null || usageStats.lastUsedTime == 0) {
+
             holder.usageTimeTextView.setVisibility(View.GONE);
             holder.lastUsedTimeTextView.setVisibility(View.GONE);
+
         } else {
             holder.usageTimeTextView.setVisibility(View.VISIBLE);
             holder.lastUsedTimeTextView.setVisibility(View.VISIBLE);
 
             // 평균 하루 사용 시간
-            float usageMin = item.getUsageStats().getTotalTimeInForeground() / (1000f * 60);
-            float useDay = (item.getUsageStats().getLastTimeStamp() - item.getUsageStats().getFirstTimeStamp()) / (1000f * 86400);
-            int averageUsageMin = (int)(usageMin / useDay);
-            holder.usageTimeTextView.setText(String.format(Locale.getDefault(), "하루평균 %s분", averageUsageMin));
+            float averageUsageMin = item.getUsageStats().averageUsageMin;
+            if (averageUsageMin < 1) {
+                holder.usageTimeTextView.setText("1분이내");
+            } else {
+                holder.usageTimeTextView.setText(String.format(Locale.getDefault(), "하루평균 %.0f분", averageUsageMin));
+            }
 
             // 최근 사용 일자
-            int hours = (int)((System.currentTimeMillis() - usageStats.getLastTimeUsed()) / (1000f * 60 * 60));
+            int hours = (int)((System.currentTimeMillis() - usageStats.lastUsedTime) / (1000f * 60 * 60));
             if (hours == 0) {
                 holder.lastUsedTimeTextView.setText("조금 전");
             } else {

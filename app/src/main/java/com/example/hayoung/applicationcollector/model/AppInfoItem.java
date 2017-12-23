@@ -1,6 +1,5 @@
 package com.example.hayoung.applicationcollector.model;
 
-import android.app.usage.UsageStats;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -12,7 +11,26 @@ public class AppInfoItem {
     private String packageName;
     private Drawable appIcon;
     private long installedTime;
-    private UsageStats usageStats;
+    private UsageStat usageStat;
+
+    public static class UsageStat {
+        public long totalUsageTime;
+        public long lastUsedTime;
+        public long startTime;
+        public long endTime;
+        public float averageUsageMin;
+
+        public UsageStat(long totalUsageTime, long lastUsedTime, long startTime, long endTime) {
+            this.totalUsageTime = totalUsageTime;
+            this.lastUsedTime = lastUsedTime;
+            this.startTime = startTime;
+            this.endTime = endTime;
+
+            float usageMin = totalUsageTime / (1000f * 60);
+            float usageDay = (endTime - startTime) / (1000f * 86400);
+            averageUsageMin = (usageMin / usageDay);
+        }
+    }
 
     public AppInfoItem(String appName, Drawable appIcon) {
         this.appName = appName;
@@ -51,11 +69,11 @@ public class AppInfoItem {
         this.installedTime = installedTime;
     }
 
-    public UsageStats getUsageStats() {
-        return usageStats;
+    public UsageStat getUsageStats() {
+        return usageStat;
     }
 
-    public void setUsageStats(UsageStats usageStats) {
-        this.usageStats = usageStats;
+    public void setUsageStats(UsageStat usageStats) {
+        this.usageStat = usageStats;
     }
 }

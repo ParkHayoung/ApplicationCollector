@@ -12,9 +12,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AppInfoItem> appInfoItemList = new ArrayList<>();
     private AppInfoListAdapter appInfoListAdapter;
-    private Map<String, UsageStats> usageStatsMap = new HashMap<>();
+    private Map<String, AppInfoItem.UsageStat> usageStatsMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +115,36 @@ public class MainActivity extends AppCompatActivity {
         @SuppressLint("WrongConstant")
         UsageStatsManager usageStatsManager = (UsageStatsManager)getSystemService("usagestats");
         if (usageStatsManager != null) {
-            usageStatsMap = usageStatsManager.queryAndAggregateUsageStats(startCalendar.getTimeInMillis(), endTime);
+            usageStatsMap = new HashMap<>();
+            List<UsageStats> results = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_MONTHLY, startCalendar.getTimeInMillis(), endTime);
+            for (UsageStats usageStats : results) {
+                if (usageStats.getFirstTimeStamp() < startCalendar.getTimeInMillis()
+                        || usageStats.getLastTimeStamp() < startCalendar.getTimeInMillis()
+                        || usageStats.getLastTimeUsed() < startCalendar.getTimeInMillis()) {
+                    // 30일 이전의 기록이므로 무시
+                    continue;
+                }
+                Log.d("TEST", usageStats.getPackageName() + ", " + getTime(usageStats.getFirstTimeStamp()) + ", " + getTime(usageStats.getLastTimeStamp()) + ", " + usageStats.getTotalTimeInForeground());
+                if (usageStatsMap.containsKey(usageStats.getPackageName())) {
+                    AppInfoItem.UsageStat stats = usageStatsMap.get(usageStats.getPackageName());
+                    stats.totalUsageTime += usageStats.getTotalTimeInForeground();
+                    if (stats.lastUsedTime < usageStats.getLastTimeUsed()) {
+                        stats.lastUsedTime = usageStats.getLastTimeUsed();
+                    }
+                    if (stats.endTime < usageStats.getLastTimeStamp()) {
+                        stats.endTime = usageStats.getLastTimeStamp();
+                    }
+                } else {
+                    usageStatsMap.put(
+                            usageStats.getPackageName(),
+                            new AppInfoItem.UsageStat(
+                                    usageStats.getTotalTimeInForeground(),
+                                    usageStats.getLastTimeUsed(),
+                                    usageStats.getFirstTimeStamp(),
+                                    usageStats.getLastTimeStamp()));
+                }
+            }
+
             if (usageStatsMap.size() > 0) {
                 for (AppInfoItem item : appInfoItemList) {
                     item.setUsageStats(usageStatsMap.get(item.getPackageName()));
@@ -124,6 +152,11 @@ public class MainActivity extends AppCompatActivity {
                 reorderListByAppTotalUsageTimeInMonth();
             }
         }
+    }
+
+    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    private String getTime(long time) {
+        return format.format(time);
     }
 
     private void getUserApplicationList() {
@@ -162,13 +195,13 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(appInfoItemList, new Comparator<AppInfoItem>() {
             @Override
             public int compare(AppInfoItem o1, AppInfoItem o2) {
-                long time1 = 0;
+                float time1 = 0;
                 if (o1.getUsageStats() != null) {
-                    time1 = o1.getUsageStats().getTotalTimeInForeground();
+                    time1 = o1.getUsageStats().averageUsageMin;
                 }
-                long time2 = 0;
+                float time2 = 0;
                 if (o2.getUsageStats() != null) {
-                    time2 = o2.getUsageStats().getTotalTimeInForeground();
+                    time2 = o2.getUsageStats().averageUsageMin;
                 }
                 if (time1 == time2) {
                     return 0;
