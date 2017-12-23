@@ -25,7 +25,9 @@ public class AppInfoItem {
             this.lastUsedTime = lastUsedTime;
             this.startTime = startTime;
             this.endTime = endTime;
+        }
 
+        public void calculateAverageUsageTime() {
             float usageMin = totalUsageTime / (1000f * 60);
             float usageDay = (endTime - startTime) / (1000f * 86400);
             averageUsageMin = (usageMin / usageDay);

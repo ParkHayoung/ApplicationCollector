@@ -147,7 +147,11 @@ public class MainActivity extends AppCompatActivity {
 
             if (usageStatsMap.size() > 0) {
                 for (AppInfoItem item : appInfoItemList) {
-                    item.setUsageStats(usageStatsMap.get(item.getPackageName()));
+                    AppInfoItem.UsageStat stats = usageStatsMap.get(item.getPackageName());
+                    if (stats != null) {
+                        stats.calculateAverageUsageTime();
+                        item.setUsageStats(stats);
+                    }
                 }
                 reorderListByAppTotalUsageTimeInMonth();
             }
